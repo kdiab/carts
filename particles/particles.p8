@@ -9,15 +9,17 @@ function _init()
 end
 
 function _update()
-		for i = 1, 10 do
-				part = {
-				x=player.x+rnd(15), 
-				y=player.y-11+rnd(20), 
-				r=1 + rnd(3), 
-				c=10,
-				l=6
-				}
-				add(particles, part)
+		if btn(4) then
+			for i = 1, 10 do
+					part = {
+					x=player.x+rnd(15), 
+					y=player.y-11+rnd(20), 
+					r=1 + rnd(3), 
+					c=10,
+					l=6
+					}
+					add(particles, part)
+			end
 		end
 		for p in all(particles) do
 				p.l -= .3
