@@ -9,6 +9,7 @@ function _init()
 end
 
 function _update()
+		if btn(❎) then force += .1 end
 		if btn(4) then
 			for i = 1, 10 do
 					part = {
@@ -38,7 +39,7 @@ function _update()
 				if btn(⬅️) then p.x -= force end
 				if btn(➡️) then p.x += force end
 				if btn(⬆️) then p.y -= force end
-				if btn(⬇️) then p.y += force*3 end
+				if btn(⬇️) then p.y += force end
 		end
 		
 		
@@ -46,7 +47,7 @@ function _update()
 end
 
 function _draw()
-		cls()
+		cls(1)
 		spr(1,player.x,player.y,2,2)
 		for p in all(particles) do
 				circfill(p.x,p.y,p.r,p.c)
