@@ -20,10 +20,14 @@ function _init()
 		--lock
 		lock_counter      = 50
 		--coin
-		coin_is_spawned = false
+		coin_is_spawned 		= false
 		coin_radius = 4
 		coin_color = 10
-		coin = {x=0, y=0, r=coin_radius, col=coin_color}
+		coin = {
+		x																	= 0, 
+		y																	= 0, 
+		r                 = coin_radius, 
+		col               = coin_color}
 		if debug then
 				debug_init()
 		end
@@ -52,6 +56,10 @@ function _draw()
 				draw_menu()
 		elseif game_state == "game" then
 				draw_game()
+		end
+		
+		if debug then
+				debug_draw()
 		end
 end
 -->8
@@ -88,8 +96,8 @@ end
 
 function draw_game()
 		draw_lock()
-		draw_player()
 		draw_coin()
+		draw_player()
 end
 -->8
 --player
@@ -115,9 +123,6 @@ function update_player()
 end
 
 function draw_player()
-				if debug then
-						print("player_pos: "..pos.."\n⧗: "..time().."\nx: "..player.start_x.."\ny: "..player.start_y.."\nend x: "..player.end_x.."\nend y: "..player.end_y.."\ncol: "..player.col,0,0,7)
-    end
     line(player.start_x, player.start_y, player.end_x, player.end_y, player.col)   
 end
 -->8
@@ -163,14 +168,47 @@ function draw_coin()
 end
 -->8
 --collision
-
+function intersect()
+    local coin_x = coin.x - 64  -- coin relative to center
+    local coin_y = coin.y - 64
+    local player_mx = (player.start_x + player.end_x)/2 - 64  -- player midpoint relative to center
+    local player_my = (player.start_y + player.end_y)/2 - 64
+    
+    local dx = coin_x - player_mx
+    local dy = coin_y - player_my
+    local distance_squared = dx*dx + dy*dy
+    
+    local collision_radius = coin.r + 1 -- 1 for padding
+    return distance_squared < collision_radius * collision_radius
+end
 -->8
 --dbg
 
 function debug_movement()
-		if btn(⬆️) then pos += 0.01 end
-		if btn(⬇️) then pos -= 0.01 end
+		if btn(⬆️) then pos += 0.005 end
+		if btn(⬇️) then pos -= 0.005 end
 		if btn(❎) then coin_is_spawned = false end
+end
+
+function debug_draw()
+	local player_midpoint_y = (player.start_y + player.end_y)/2
+	local player_midpoint_x = (player.start_x + player.end_x)/2
+	circ(player_midpoint_x,player_midpoint_y,0,0)
+	print("player_pos: "..pos..
+	"\n⧗: "..time()..
+	"\nx: "..player.start_x..
+	"\ny: "..player.start_y..
+	"\nend x: "..player.end_x..
+	"\nend y: "..player.end_y..
+	"\nplayer mp_y: "..player_midpoint_y..
+	"\nplayer mp_x: "..player_midpoint_x..
+	"\ncol: "..player.col..
+	"\ncoin x: "..coin.x..
+	"\ncoin y: "..coin.y..
+	"\ncoin radius: "..coin.r..
+	"\ncollision status: "..tostr(intersect())
+	,0,0,7
+	)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
