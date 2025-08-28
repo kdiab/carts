@@ -3,19 +3,27 @@ version 42
 __lua__
 --init
 function _init()
+		--general
 		debug             = true
 		bg                = 1
 		game_state        = "menu"
+		--player
 		dial_speed        = 0.1
 		dial_acceleration = 1
 		dial_direction    = 1
-		lock_counter      = 50
 		player = {
 		start_x           = 0, 
 		start_y           = 0, 
 		end_x             = 0, 
 		end_y             = 0, 
 		col               = 8}
+		--lock
+		lock_counter      = 50
+		--coin
+		coin_is_spawned = false
+		coin_radius = 4
+		coin_color = 10
+		coin = {x=0, y=0, r=coin_radius, col=coin_color}
 		if debug then
 				debug_init()
 		end
@@ -63,6 +71,16 @@ end
 
 function update_game()
 		update_player()
+		local offset = 64
+		local inner  = 30
+		local outer  = 45
+		local a = rnd(1)
+		create_coin(
+		offset, 
+		offset,
+		inner, 
+		outer, 
+		a)
 		if debug then
 				debug_movement()
 		end
@@ -71,6 +89,7 @@ end
 function draw_game()
 		draw_lock()
 		draw_player()
+		draw_coin()
 end
 -->8
 --player
@@ -97,7 +116,7 @@ end
 
 function draw_player()
 				if debug then
-						print("⧗: "..time().."\nx: "..player.start_x.."\ny: "..player.start_y.."\nend x: "..player.end_x.."\nend y: "..player.end_y.."\ncol: "..player.col,0,0,7)
+						print("player_pos: "..pos.."\n⧗: "..time().."\nx: "..player.start_x.."\ny: "..player.start_y.."\nend x: "..player.end_x.."\nend y: "..player.end_y.."\ncol: "..player.col,0,0,7)
     end
     line(player.start_x, player.start_y, player.end_x, player.end_y, player.col)   
 end
@@ -121,11 +140,37 @@ function draw_lock()
 		print("\^w\^t\^b"..lock_counter,x,y,counter_color) 
 end
 -->8
+--coin
+
+function create_coin(
+		x_offset, 
+		y_offset,
+		inner_radius,
+		outer_radius,
+		angle)
+		if not coin_is_spawned then
+				local m = (inner_radius + outer_radius) / 2
+				local x = x_offset + cos(angle) * m
+				local y = y_offset + sin(angle) * m
+				coin.x = x
+				coin.y = y
+				coin_is_spawned = true
+		end
+end
+
+function draw_coin()
+		circfill(coin.x, coin.y, coin.r, coin.col)
+end
+-->8
+--collision
+
+-->8
 --dbg
 
 function debug_movement()
 		if btn(⬆️) then pos += 0.01 end
 		if btn(⬇️) then pos -= 0.01 end
+		if btn(❎) then coin_is_spawned = false end
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
