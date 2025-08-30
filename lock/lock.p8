@@ -4,7 +4,7 @@ __lua__
 --init
 function _init()
 		--general
-		debug             =	false
+		debug             =	true
 		bg                = 1
 		game_state        = "menu"
 		--player
@@ -45,7 +45,7 @@ end
 
 function debug_init()
 		game_state   = "game"
-		lock_counter = 9
+		lock_counter = 0
 		dbg_pos      = 0
 end
 
@@ -59,6 +59,8 @@ function _update()
 				update_game()
 		elseif game_state == "dead" then
 				update_death()
+		elseif game_state == "win" then
+				update_win()
 		end
 end
 
@@ -71,6 +73,9 @@ function _draw()
 				draw_game()
 		elseif game_state == "dead" then
 				draw_death()
+		elseif game_state == "win" then
+				cls(bg)
+				draw_win()
 		end
 		
 		if debug then
@@ -106,6 +111,7 @@ function update_game()
 		offset,
 		inner, 
 		outer)
+		update_particles(0.3, 0.3, 0.4, 6, 7)
 		if debug then
 				debug_movement()
 		end
@@ -115,13 +121,17 @@ function draw_game()
 		draw_lock()
 		draw_coin()
 		draw_player()
+		draw_particles()
 end
 
 function collect_coin()
 		if btnp(4) then
 				if not intersect(coin) then
 						game_state = "dead"
+				elseif lock_counter < 1 then
+						game_state = "win"
 				else
+						add_particles(coin, coin.col, 7)
 						coin_is_spawned = false
 						lock_counter -= 1
 						dial_speed *= dial_direction
@@ -288,51 +298,73 @@ end
 -->8
 --particles
 
-function add_particles(a)
+function add_particles(a, col, life, offset)
 		for i = 1, 10 do
-				part = {
-				x=a.x+rnd(15), 
-				y=a.y-11+rnd(20), 
-				r=a.r, 
-				col=a.c,
-				life=6
+				local part = {
+				x= a.x+rnd(15), 
+				y= a.y-11+rnd(20), 
+				r= a.r-rnd(offset), 
+				c= col,
+				l= life
 				}
 				add(particles, part)
 		end
 end
 
-function update_particles()
+function update_particles(lrate, yrate, rrate, half_life, cc)
 		for p in all(particles) do
-				p.life -= .3
-				p.y -= 1
-				p.r -= .1
-				if p.life <= 0 then
+				p.l -= lrate
+				p.y -= yrate
+				p.r -= rrate
+				if p.l <= half_life
+						then p.c = cc
+				end
+				if p.l <= 0 then
 						del(particles, p)
 				end
 		end
 end
 
 function draw_particles()
-		cls(1)
-		spr(1,player.x,player.y,2,2)
 		for p in all(particles) do
 				circfill(p.x,p.y,p.r,p.c)
 		end	
 end
 -->8
+--win
+
+function update_win()
+		if btn(❎) then 
+				init()
+				game_state = "game"	  
+		end
+end
+
+function draw_win()
+		draw_game()
+		circfill(64,64,30,6)
+		print("you win!",22,3,7)
+		print("press ❎ to restart")
+		print("\^w\^t\^byou",53,53,counter_color)
+		print("\^w\^t\^bwin")
+end
+-->8
 --dbg
 
 function debug_movement()
-		if btn(⬆️) then dbg_pos += 0.005 end
-		if btn(⬇️) then dbg_pos -= 0.005 end
-		if btn(❎) then coin_is_spawned = false end
+		if btn(⬆️) then dbg_pos += 0.01 end
+		if btn(⬇️) then dbg_pos -= 0.01 end
+		if btn(❎) then 
+		add_particles(coin, coin.col, 7) 
+		end
 end
 
 function debug_draw()
 	local player_midpoint_y = (player.start_y + player.end_y)/2
 	local player_midpoint_x = (player.start_x + player.end_x)/2
 	circ(player_midpoint_x,player_midpoint_y,0,0)
-	print("player_pos: "..dbg_pos..
+	print(
+	"player_pos: "..dbg_pos..
 	"\n⧗: "..time()..
 	"\nx: "..player.start_x..
 	"\ny: "..player.start_y..
@@ -348,7 +380,6 @@ function debug_draw()
 	"\nwall direction: "..wall_direction..
 	"\ncollision status: "..tostr(intersect(coin))..
 	"\ndead status: "..tostr(intersect(wall))
-
 	,0,0,7
 	)
 	draw_wall()
