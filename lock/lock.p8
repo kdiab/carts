@@ -4,7 +4,7 @@ __lua__
 --init
 function _init()
 		--general
-		debug             =	true
+		debug             =	false
 		bg                = 1
 		game_state        = "menu"
 		--player
@@ -14,10 +14,10 @@ function _init()
 		pos               = 0
 		coin_pos										= 0
 		player            = {
-		start_x           = -100, 
-		start_y           = -100, 
-		end_x             = -100, 
-		end_y             = -100, 
+		start_x           = -10, 
+		start_y           = -10, 
+		end_x             = -10, 
+		end_y             = -10, 
 		col               = 8}
 		--lock
 		lock_counter      = 50
@@ -45,7 +45,7 @@ end
 
 function debug_init()
 		game_state   = "game"
-		lock_counter = 0
+		lock_counter = 30
 		dbg_pos      = 0
 end
 
@@ -98,11 +98,11 @@ end
 --game
 
 function update_game()
-		update_player()
 		if intersect(wall) then
 				game_state = "dead"
 		end
 		collect_coin()
+		update_player()
 		local offset = 64
 		local inner  = 30
 		local outer  = 45
@@ -125,16 +125,29 @@ function draw_game()
 end
 
 function collect_coin()
+		local coin_sfx = 0
 		if btnp(4) then
 				if not intersect(coin) then
 						game_state = "dead"
 				elseif lock_counter < 1 then
 						game_state = "win"
 				else
+						if lock_counter <= 50 then
+						coin_sfx = 1
+						end
+						if lock_counter == 30 then
+								coin_sfx = 2
+								dial_speed *= 1.5
+						end
+						if lock_counter == 15 then
+								coin_sfx = 3
+								dial_speed *= 1.2
+						end
+						sfx(coin_sfx)
 						add_particles(coin, coin.col, 7)
 						coin_is_spawned = false
 						lock_counter -= 1
-						dial_speed *= dial_direction
+						dial_speed = dial_speed * dial_direction
 				end		
 		end
 end
@@ -272,10 +285,10 @@ function init()
 		pos               = 0
 		coin_pos										= 0
 		player            = {
-		start_x           = -100, 
-		start_y           = -100, 
-		end_x             = -100, 
-		end_y             = -100, 
+		start_x           = -10, 
+		start_y           = -10, 
+		end_x             = -10, 
+		end_y             = -10, 
 		col               = 8}
 		--lock
 		lock_counter      = 50
@@ -391,3 +404,8 @@ __gfx__
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00077000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+__sfx__
+010500003a7603a7603a7603a7603c7503c7503c7503c7503070037700377003770037700377003a7003a700160001600018000190001b0001d0002000022000180001b0001d0002300028000300000000000000
+010400003a7303a7303a7303c7303c7303c7303c7303c7303a7003a7003c7003c7003c7003c7003c7000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010300003a7303a7303a7303c7303c7303c7303c7303c730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+010200003a7303a7303a7303c7303c7303c7303c7303c730000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
