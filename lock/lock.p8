@@ -4,6 +4,7 @@ __lua__
 --init
 function _init()
 		--general
+		coin_sfx 									= 0
 		debug             =	false
 		bg                = 1
 		game_state        = "menu"
@@ -125,14 +126,13 @@ function draw_game()
 end
 
 function collect_coin()
-		local coin_sfx = 0
 		if btnp(4) then
 				if not intersect(coin) then
 						game_state = "dead"
 				elseif lock_counter < 1 then
 						game_state = "win"
 				else
-						if lock_counter <= 50 then
+						if lock_counter == 50 then
 						coin_sfx = 1
 						end
 						if lock_counter == 30 then
@@ -278,6 +278,7 @@ function draw_death()
 end
 
 function init()
+		coin_sfx 									= 0
 		--player
 		dial_speed        = 0.01
 		dial_direction    = -1
