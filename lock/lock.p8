@@ -2,6 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 42
 __lua__
 --init
+
 function _init()
 		--general
 		coin_sfx 									= 0
