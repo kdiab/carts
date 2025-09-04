@@ -102,7 +102,8 @@ end
 
 function bullet_init()
 		bullets = {}
-		fire_rate = 2
+		fire_rate = 0.3
+		bullet_size = 1
 end
 
 function update_bullet()
@@ -125,14 +126,15 @@ function spawn_bullet(x, y, dx, dy)
 							x=x,
 							y=y,
 							dx=dx,
-							dy=dy
+							dy=dy,
+							c=rnd(15)
 						}
 		add(bullets,b)
 end
 
 function draw_bullet()
 		for b in all(bullets) do
-				circ(b.x, b.y, 1,9)
+				circ(b.x, b.y, bullet_size,b.c)
 		end
 end
 __gfx__
