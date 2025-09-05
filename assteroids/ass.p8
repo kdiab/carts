@@ -18,6 +18,7 @@ function _update()
 end
 
 function _draw()
+		cls(0)
 		player_draw()
 		draw_bullet()
 		if debug then
@@ -43,9 +44,22 @@ function player_init()
 		right={x=0,y=0},
 		d_vec={x=0,y=0}
 		}
+		timer = 0
+		fire_rate = 7
 end
 
 function player_update()
+		timer += 1
+		if h > 128 then
+				h = 0
+		elseif h < 0 then
+				h = 128
+		end
+		if k > 128 then
+				k = 0
+		elseif k < 0 then
+				k = 128
+		end
 		p = {
 		top={x=h+cos(tip+s)*r,y=k+sin(tip+s)*r},
 		left={x=h+cos(b_l+s)*r,y=k+sin(b_l+s)*r},
@@ -62,19 +76,18 @@ function player_update()
 				h += p.d_vec.x*base_speed
 				k += p.d_vec.y*base_speed
 		end
-		if btn(4) then
-				spawn_bullet(
-						p.top.x,
-						p.top.y,
-						p.d_vec.x,
-						p.d_vec.y
-				)
+		if btn(4) and timer >= fire_rate then
+						spawn_bullet(
+								p.top.x,
+								p.top.y,
+								p.d_vec.x,
+								p.d_vec.y
+						)
+					timer = 0
 		end
-		
 end
 
 function player_draw()
-		cls()
 		line(p.top.x, p.top.y, p.left.x, p.left.y)
 		line(p.top.x, p.top.y, p.right.x, p.right.y)
 		line(p.right.x, p.right.y, p.left.x, p.left.y)
@@ -102,21 +115,31 @@ end
 
 function bullet_init()
 		bullets = {}
-		fire_rate = 0.3
 		bullet_size = 1
+		bullet_life = 12
+		bullet_color = 9
 end
 
 function update_bullet()
-		for i=1, #bullets do
-				bullets[i].x += bullets[i].dx*fire_rate
-				bullets[i].y += bullets[i].dy*fire_rate
+		for b in all(bullets) do
+				b.x += b.dx*fire_rate
+				if b.x > 128 then
+						b.x = 0
+				elseif b.x < 0 then
+						b.x = 128
+				end
+				b.y += b.dy*fire_rate
+				if b.y > 128 then
+						b.y = 0
+				elseif b.y < 0 then
+						b.y = 128
+				end
 		end
 		for b in all(bullets) do
-				if b.x > 128 
-				or b.x < 0
-				or b.y > 128
-				or b.y < 0 then
+				if b.l <= 0 then
 						del(bullets,b)
+				else
+						b.l -= 1
 				end
 		end
 end
@@ -127,7 +150,8 @@ function spawn_bullet(x, y, dx, dy)
 							y=y,
 							dx=dx,
 							dy=dy,
-							c=rnd(15)
+							c=bullet_color,
+							l=bullet_life
 						}
 		add(bullets,b)
 end
