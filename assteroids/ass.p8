@@ -7,19 +7,25 @@ function _init()
 		
 		pi = 3.1415926535
 
-		bullet_init()
-		player_init()
+		init_bullet()
+		init_player()
+		init_asteroid()
 end
 -->8
 --update & draw
 function _update()
-		player_update()
+		update_player()
+		update_asteroid()
 		update_bullet()
+		if debug then
+				dbg_spawn_asteroids()
+		end
 end
 
 function _draw()
 		cls(0)
-		player_draw()
+		draw_player()
+		draw_asteroid()
 		draw_bullet()
 		if debug then
 				dbg_print()
@@ -28,7 +34,7 @@ end
 -->8
 --player
 
-function player_init()
+function init_player()
 		r 									= 10
 		h 									= 60
 		k 									= 60
@@ -48,7 +54,7 @@ function player_init()
 		fire_rate = 7
 end
 
-function player_update()
+function update_player()
 		timer += 1
 		if h > 128 then
 				h = 0
@@ -87,7 +93,7 @@ function player_update()
 		end
 end
 
-function player_draw()
+function draw_player()
 		line(p.top.x, p.top.y, p.left.x, p.left.y)
 		line(p.top.x, p.top.y, p.right.x, p.right.y)
 		line(p.right.x, p.right.y, p.left.x, p.left.y)
@@ -95,6 +101,11 @@ function player_draw()
 end
 -->8
 --dbg
+function dbg_spawn_asteroids()
+		if btn(⬇️) then
+				spawn_asteroid(3)
+		end
+end
 
 function dbg_print()
 		print(
@@ -113,7 +124,7 @@ end
 -->8
 --bullet
 
-function bullet_init()
+function init_bullet()
 		bullets = {}
 		bullet_size = 1
 		bullet_life = 12
@@ -169,12 +180,27 @@ function init_asteroid()
 end
 
 function update_asteroid()
+		for a in all(asteroids) do
+				a.x += a.dx
+				a.y += a.dy
+		end
 end
 
 function draw_asteroid()
+		for a in all(asteroids) do
+				circ(a.x, a.y, a.r, 7)
+		end
 end
 
-function spawn_asteroid()
+function spawn_asteroid(r)
+		local a = {
+				x=63,
+				y=63,
+				dx=cos(rnd(1)),
+				dy=sin(rnd(1)),
+				r=r
+		}
+		add(asteroids, a)
 end
 __gfx__
 00000000007777000077770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
