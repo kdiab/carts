@@ -97,29 +97,6 @@ function draw_player()
 		line(p.top.x, p.top.y, p.left.x, p.left.y)
 		line(p.top.x, p.top.y, p.right.x, p.right.y)
 		line(p.right.x, p.right.y, p.left.x, p.left.y)
-		line(h, k,p.top.x,p.top.y,8)
-end
--->8
---dbg
-function dbg_spawn_asteroids()
-		if btn(⬇️) then
-				spawn_asteroid(3)
-		end
-end
-
-function dbg_print()
-		print(
-		"tip x: "..p.top.x..
-		"\ntip y: "..p.top.y..
-		"\nleft x: "..p.left.x..
-		"\nleft y: "..p.left.y..
-		"\nright x: "..p.right.x..
-		"\nright y: "..p.right.y..
-		"\nh : "..h..
-		"\nk : "..k,
-
-		0,0,6
-		)
 end
 -->8
 --bullet
@@ -183,6 +160,16 @@ function update_asteroid()
 		for a in all(asteroids) do
 				a.x += a.dx
 				a.y += a.dy
+				if a.x < 0 then
+						del(asteroids, a)
+				elseif a.x > 128 then
+						del(asteroids, a)
+				end
+				if a.y < 0 then
+						del(asteroids, a)
+				elseif a.y > 128 then
+						del(asteroids, a)
+				end
 		end
 end
 
@@ -192,15 +179,69 @@ function draw_asteroid()
 		end
 end
 
-function spawn_asteroid(r)
+function spawn_asteroid(r,odx,ody,ox,oy)
+		local angle = rnd(1)
+		local dx = cos(angle)
+		local dy = sin(angle)
+		local x
+		local y
+		if dx <= 0 and not odx then
+				x = 128
+		elseif dx > 0 then
+				x = 0
+		end
+		
+		if dy <= 0 and not ody then
+				y = 128
+		elseif dy > 0 then
+				y = 0
+		end
+		
+		if odx then
+				dx = odx
+		end
+		if ody then
+				dy = ody
+		end
+		if ox then
+				x = ox
+		end
+		if oy then
+				y = oy
+		end
+		
 		local a = {
-				x=63,
-				y=63,
-				dx=cos(rnd(1)),
-				dy=sin(rnd(1)),
+				x=x,
+				y=y,
+				dx=dx,
+				dy=dy,
 				r=r
 		}
 		add(asteroids, a)
+end
+-->8
+--dbg
+function dbg_spawn_asteroids()
+		if btn(❎) then
+				spawn_asteroid(rnd((8)))
+		end
+end
+
+function dbg_print()
+		line(h, k,p.top.x,p.top.y,8)
+		print(
+		"tip x: "..p.top.x..
+		"\ntip y: "..p.top.y..
+		"\nleft x: "..p.left.x..
+		"\nleft y: "..p.left.y..
+		"\nright x: "..p.right.x..
+		"\nright y: "..p.right.y..
+		"\nh : "..h..
+		"\nk : "..k..
+		"\ndy : "..p.d_vec.y..
+		"\ndx : "..p.d_vec.x,
+		0,0,6
+		)
 end
 __gfx__
 00000000007777000077770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
