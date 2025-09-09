@@ -219,11 +219,34 @@ function spawn_asteroid(r,odx,ody,ox,oy)
 		}
 		add(asteroids, a)
 end
+
+function split_asteroid(a)
+		local angle = 1
+		local a1 = {
+				x=a.x,
+				y=a.y,
+				dx=cos(a.dx+angle),
+				dy=sin(a.dy+angle),
+				r=flr(a.r/2)
+		}
+		local a2 = {
+				x=a.x,
+				y=a.y,
+				dx=a.dx-angle,
+				dy=a.dy-angle,
+				r=flr(a.r/2)
+		}
+		add(asteroids, a1)
+		add(asteroids, a2)
+end
 -->8
 --dbg
 function dbg_spawn_asteroids()
 		if btn(❎) then
-				spawn_asteroid(rnd((8)))
+				spawn_asteroid(6,0.2,0.2,63,63)
+		end
+		if btn(⬇️) then
+				split_asteroid(asteroids[1])
 		end
 end
 
