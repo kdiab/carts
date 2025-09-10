@@ -154,6 +154,7 @@ end
 
 function init_asteroid()
 		asteroids = {}
+		max_asteroids = 10
 end
 
 function update_asteroid()
@@ -220,6 +221,15 @@ function spawn_asteroid(r,odx,ody,ox,oy)
 		add(asteroids, a)
 end
 
+--[[
+not sure how to calculate the
+angle on this one, but it works
+it makes sense to me in radians
+desmos.com/calculator/nmfcixood5
+probably would need to pass in the 
+original angle asteroid was made with but i don't want to
+]]--
+
 function split_asteroid(a)
 		local angle = 1
 		local a1 = {
@@ -242,12 +252,12 @@ end
 -->8
 --dbg
 function dbg_spawn_asteroids()
-		if btn(❎) then
+		--[[if btn(❎) then
 				spawn_asteroid(6,0.2,0.2,63,63)
 		end
 		if btn(⬇️) then
 				split_asteroid(asteroids[1])
-		end
+		end]]--
 end
 
 function dbg_print()
@@ -265,6 +275,17 @@ function dbg_print()
 		"\ndx : "..p.d_vec.x,
 		0,0,6
 		)
+end
+-->8
+--collision
+function collision(b, a)
+    local dx = b.x - a.x
+    local dy = b.y - a.y
+    local distance_squared = dx * dx + dy * dy
+    
+    -- collision if distance is less than circle radius
+    local radius_squared = a.r * a.r
+    return distance_squared < radius_squared
 end
 __gfx__
 00000000007777000077770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
