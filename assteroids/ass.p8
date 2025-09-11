@@ -10,6 +10,9 @@ function _init()
 		init_bullet()
 		init_player()
 		init_asteroid()
+		if debug then
+				init_dbg()
+		end
 end
 -->8
 --update & draw
@@ -17,6 +20,8 @@ function _update()
 		update_player()
 		update_asteroid()
 		update_bullet()
+		handle_collision()
+		handle_spawning()
 		if debug then
 				dbg_spawn_asteroids()
 		end
@@ -146,7 +151,7 @@ end
 
 function draw_bullet()
 		for b in all(bullets) do
-				circ(b.x, b.y, bullet_size,b.c)
+				circfill(b.x, b.y, bullet_size,b.c)
 		end
 end
 -->8
@@ -154,7 +159,7 @@ end
 
 function init_asteroid()
 		asteroids = {}
-		max_asteroids = 10
+		max_asteroids = 4
 end
 
 function update_asteroid()
@@ -162,14 +167,14 @@ function update_asteroid()
 				a.x += a.dx
 				a.y += a.dy
 				if a.x < 0 then
-						del(asteroids, a)
+						a.x = 128
 				elseif a.x > 128 then
-						del(asteroids, a)
+						a.x = 0
 				end
 				if a.y < 0 then
-						del(asteroids, a)
+						a.y = 128
 				elseif a.y > 128 then
-						del(asteroids, a)
+						a.y = 0
 				end
 		end
 end
@@ -186,6 +191,7 @@ function spawn_asteroid(r,odx,ody,ox,oy)
 		local dy = sin(angle)
 		local x
 		local y
+		
 		if dx <= 0 and not odx then
 				x = 128
 		elseif dx > 0 then
@@ -249,18 +255,66 @@ function split_asteroid(a)
 		add(asteroids, a1)
 		add(asteroids, a2)
 end
+
+function handle_spawning()
+		if #asteroids < max_asteroids then
+				spawn_asteroid(6)
+		end
+end
+-->8
+--collision
+function collided(b, a)
+    local dx = b.x - a.x
+    local dy = b.y - a.y
+    local distance_squared = dx * dx + dy * dy
+    
+    -- collision if distance is less than circle radius
+    local radius_squared = a.r * a.r
+    return distance_squared < radius_squared
+end
+
+function handle_collision()
+		for b in all(bullets) do
+				for a in all(asteroids) do
+						if collided(b, a) then
+								if a.r == 6 then
+						  	split_asteroid(a)
+						  	del(asteroids, a)
+						  else
+						  	del(asteroids, a)
+						  end
+						end
+				end
+		end
+end
 -->8
 --dbg
+function init_dbg()
+		dbg_bullet = {
+							x=63,
+							y=63,
+		}
+end
+
 function dbg_spawn_asteroids()
-		--[[if btn(❎) then
-				spawn_asteroid(6,0.2,0.2,63,63)
-		end
-		if btn(⬇️) then
-				split_asteroid(asteroids[1])
-		end]]--
+
+--		if btn(❎) then
+--				spawn_asteroid(6,0,0,63,63)
+--		end
+--
+--		if btn(⬆️) then dbg_bullet.y -= 1 end
+--		if btn(⬇️) then dbg_bullet.y += 1 end
+--		if btn(➡️) then dbg_bullet.x += 1 end
+--		if btn(⬅️) then dbg_bullet.x -= 1 end
+
+
 end
 
 function dbg_print()
+--		for a in all(asteroids) do
+--				print(collided(dbg_bullet, a),63,63)
+--		end
+--		circ(dbg_bullet.x, dbg_bullet.y,1)
 		line(h, k,p.top.x,p.top.y,8)
 		print(
 		"tip x: "..p.top.x..
@@ -275,17 +329,6 @@ function dbg_print()
 		"\ndx : "..p.d_vec.x,
 		0,0,6
 		)
-end
--->8
---collision
-function collision(b, a)
-    local dx = b.x - a.x
-    local dy = b.y - a.y
-    local distance_squared = dx * dx + dy * dy
-    
-    -- collision if distance is less than circle radius
-    local radius_squared = a.r * a.r
-    return distance_squared < radius_squared
 end
 __gfx__
 00000000007777000077770000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
