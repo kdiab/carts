@@ -4,7 +4,7 @@ __lua__
 -- init	
 
 function _init()
-		debug = true
+		debug = false
 		score = 0
 		lives = 3
 		best_score = 0
@@ -22,6 +22,7 @@ function _init()
 		init_planes()
 		init_player()
 		init_rockets()
+		init_particles()
 		if debug then
 				init_dbg()
 		end
@@ -41,6 +42,7 @@ function _update()
 				update_player()
 				update_planes()
 				update_rockets()
+				update_particles()
 		elseif game_state == "dead" then
 				update_ui()
 				update_dead()
@@ -58,9 +60,11 @@ function _draw()
 					map_coords.sx,
 					map_coords.sy
 				)
+				print("score: "..score,1,18,0)
 				draw_planes()
 				draw_player()
 				draw_rockets()
+				draw_particles()
 				draw_ui()
 		elseif game_state == "dead" then
 				draw_dead()
@@ -150,7 +154,7 @@ end
 function init_rockets()
 		rockets = {}
 		max_rockets = 3
-		rocket_speed = 2
+		rocket_speed = 0.07
 end
 
 function update_rockets()
@@ -159,6 +163,7 @@ function update_rockets()
 		end
 		for r in all(rockets) do
 				r.y -= r.s
+				r.s += rocket_speed
 				if r.y < 0 then
 						del(rockets, r)
 				end
@@ -175,8 +180,8 @@ end
 function spawn_rocket()
 		local r = {
 				x=player.x+4,
-				y=player.y - 4,
-				s=rocket_speed
+				y=player.y - 6,
+				s=0.2
 		}
 		add(rockets, r)
 end
@@ -187,72 +192,101 @@ function draw_rockets()
 		end
 end
 -->8
---dbg
+--particles
 
-function init_dbg()
---		spawn_plane_dbg()
---		spawn_rocket_dbg()
-		set_gamestate("dead")
+function init_particles()
+		rocket_particles = {}
+		tower_particles = {}
 end
-function dbg_map()
-		if btn(⬅️) then
-				map_coords.cx=17 -- for gameover
+
+function update_particles()
+		spawn_rocket_particles()
+		local life_rate = 0.1
+		for p in all(rocket_particles) do
+			p.x += -1 + rnd(2)
+			p.y += p.yr
+			p.r -= p.rr
+			p.life -= life_rate
+			if p.life <= 9 then
+					p.c = 10
+			end
+			if p.life <= 0 then
+					del(rocket_particles, p)
+			end
 		end
-		if btn(➡️) then
-				map_coords.cx=0
+		for p in all(tower_particles) do
+			p.x += -1 + rnd(2)
+			p.y -= p.yr
+			p.r -= p.rr
+			p.life -= life_rate
+			if p.life <= 9 then
+					p.c = 10
+			end
+			if p.life <= 8 then
+							p.c = 9
+			end
+			if p.life <= 0 then
+					del(rocket_particles, p)
+			end
 		end
 end
 
-function dbg_rockets()
-		rocket_speed = 0
-		if btn(⬆️) then
-				rockets[1].y -= 1
+function draw_particles()
+		for p in all(rocket_particles) do
+				circfill(p.x,p.y,p.r,p.c)
 		end
-		if btn(⬇️) then
-				rockets[1].y += 1
-		end
-		if btn(➡️) then
-				rockets[1].x += 1
-		end
-		if btn(⬅️) then
-				rockets[1].x -= 1
-		end
-		
 end
 
-function set_gamestate(a)
-		game_state = a
-end
 
-function update_dbg()
---		dbg_rockets()
---		dbg_map()
-end
-
-function draw_dbg()
---		print(collided(rockets[1], planes[1],63,23,0))
-end
-
-function spawn_plane_dbg()
-		local x = 32
-		local y = 40 + flr(rnd(50))
-		local sp = {8,10,40}
-		local p = {
-				sp=sp[flr(rnd(3)+1)],
-				x=x,
-				y=y,
-				speed=0
-				}
-		add(planes,p)
-end
-
-function spawn_rocket_dbg()
-		local r = {
-				x=67,
-				y=63,
-				s=0
+function spawn_tower_particles()
+		local life = 10
+		local r = 5
+		local x
+		local y
+		local rr = 0.1
+		local yr = 0.7
+		p = {
+				life = life,
+				r = r,
+				x = 82,
+				y = 40,
+				rr = rr,
+				yr = yr,
+				c  = 8
 		}
-		add(rockets, r)
+		p2 = {
+				life = life,
+				r = r,
+				x = 117,
+				y = 47,
+				rr = rr,
+				yr = yr,
+				c  = 8
+		}
+		add(tower_particles,p)
+		add(tower_particles,p2)
+
+end
+
+function spawn_rocket_particles()
+		local life = 10
+		local r = 2
+		local x
+		local y
+		local rr = 0.1
+		local yr = 0.1
+		for b in all(rockets) do
+				p = {
+						life = life,
+						r = r,
+						x = b.x+4,
+						y = b.y+8,
+						rr = rr,
+						yr = yr,
+						c  = 9
+				}
+				add(rocket_particles,p)
+		end
 end
 -->8
 -- collision
@@ -322,6 +356,8 @@ end
 -->8
 --dead state
 function update_dead()
+		spawn_tower_particles()
+		update_particles()
 		if btnp(🅾️) or btnp(❎) then
 				restart_game()
 				game_state = "game"
@@ -330,6 +366,9 @@ end
 
 function draw_dead()
 		map(17,0,0,0)
+		for p in all(tower_particles) do
+				circfill(p.x,p.y,p.r,p.c)
+		end
 		print("score: "..score,20,63,0)
 		print("best:  "..best_score)
 
@@ -341,6 +380,8 @@ function init_dead()
 end
 
 function restart_game()
+		tower_particles = {}
+		rocket_particles = {}
 		score = 0
 		lives = 3
 		map_coords = {
@@ -397,6 +438,74 @@ function draw_ui()
 				rocket_stock[r].x,
 				rocket_stock[r].y)
 		end
+end
+-->8
+--dbg
+
+function init_dbg()
+--		spawn_plane_dbg()
+--		spawn_rocket_dbg()
+		set_gamestate("dead")
+end
+function dbg_map()
+		if btn(⬅️) then
+				map_coords.cx=17 -- for gameover
+		end
+		if btn(➡️) then
+				map_coords.cx=0
+		end
+end
+
+function dbg_rockets()
+		rocket_speed = 0
+		if btn(⬆️) then
+				rockets[1].y -= 1
+		end
+		if btn(⬇️) then
+				rockets[1].y += 1
+		end
+		if btn(➡️) then
+				rockets[1].x += 1
+		end
+		if btn(⬅️) then
+				rockets[1].x -= 1
+		end
+		
+end
+
+function set_gamestate(a)
+		game_state = a
+end
+
+function update_dbg()
+--		dbg_rockets()
+--		dbg_map()
+end
+
+function draw_dbg()
+--		print(collided(rockets[1], planes[1],63,23,0))
+end
+
+function spawn_plane_dbg()
+		local x = 32
+		local y = 40 + flr(rnd(50))
+		local sp = {8,10,40}
+		local p = {
+				sp=sp[flr(rnd(3)+1)],
+				x=x,
+				y=y,
+				speed=0
+				}
+		add(planes,p)
+end
+
+function spawn_rocket_dbg()
+		local r = {
+				x=67,
+				y=63,
+				s=0
+		}
+		add(rockets, r)
 end
 __gfx__
 00000000cccccccc6777777dd666666dccccccc65ccccccccc777777ccccccccffffffffffffffffffffffffffffffff679a7751d69966117777777700000000
