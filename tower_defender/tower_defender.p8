@@ -4,18 +4,22 @@ __lua__
 -- init	
 
 function _init()
-debug = true
-palt(0, false)
-palt(15,true)
-game_state="menu"
-map_coords = {
-		cx=0,
-		cy=0,
-		sx=0,
-		sy=0
-}
-init_planes()
-init_player()
+		debug = true
+		palt(0, false)
+		palt(15,true)
+		game_state="menu"
+		map_coords = {
+				cx=0,
+				cy=0,
+				sx=0,
+				sy=0
+		}
+		init_planes()
+		init_player()
+		init_rockets()
+		if debug then
+				init_dbg()
+		end
 end
 
 -->8
@@ -29,7 +33,8 @@ function _update()
 				update_menu()
 		elseif game_state == "game" then
 				update_player()
-				update_planes()
+--				update_planes()
+--				update_rockets()
 		elseif game_state == "dead" then
 		end
 end
@@ -47,7 +52,11 @@ function _draw()
 				)
 				draw_planes()
 				draw_player()
+				draw_rockets()
 		elseif game_state == "dead" then
+		end
+		if debug then
+				draw_dbg()
 		end
 end
 -->8
@@ -119,18 +128,46 @@ end
 -->8
 -- rockets
 
-function init_rocket()
+function init_rockets()
 		rockets = {}
 		max_rockets = 3
+		rocket_speed = 2
 end
 
 function update_rockets()
+		if btnp(4) and #rockets < max_rockets then
+				spawn_rocket()
+		end
+		for r in all(rockets) do
+				r.y -= r.s
+				if r.y < 0 then
+						del(rockets, r)
+				end
+		end
+end
+
+function spawn_rocket()
+		local r = {
+				x=player.x+4,
+				y=player.y - 4,
+				s=rocket_speed
+		}
+		add(rockets, r)
 end
 
 function draw_rockets()
+		for r in all(rockets) do
+				spr(17,r.x,r.y)
+		end
+end
 -->8
 --dbg
 
+function init_dbg()
+--		spawn_plane_dbg()
+--		spawn_rocket_dbg()
+		set_gamestate("game")
+end
 function dbg_map()
 		if btn(⬅️) then
 				map_coords.cx=17 -- for gameover
@@ -140,19 +177,76 @@ function dbg_map()
 		end
 end
 
+function dbg_rockets()
+		rocket_speed = 0
+		if btn(⬆️) then
+				rockets[1].y -= 1
+		end
+		if btn(⬇️) then
+				rockets[1].y += 1
+		end
+		if btn(➡️) then
+				rockets[1].x += 1
+		end
+		if btn(⬅️) then
+				rockets[1].x -= 1
+		end
+		
+end
+
 function set_gamestate(a)
 		game_state = a
 end
 
 function update_dbg()
-		dbg_map()
-		set_gamestate("game")
+--		dbg_rockets()
+--		dbg_map()
 end
 
 function draw_dbg()
+--		print(collided(rockets[1], planes[1],63,23,0))
+end
+
+function spawn_plane_dbg()
+		local x = 32
+		local y = 40 + flr(rnd(50))
+		local sp = {8,10,40}
+		local p = {
+				sp=sp[flr(rnd(3)+1)],
+				x=x,
+				y=y,
+				speed=0
+				}
+		add(planes,p)
+end
+
+function spawn_rocket_dbg()
+		local r = {
+				x=67,
+				y=63,
+				s=0
+		}
+		add(rockets, r)
 end
 -->8
---gamestate
+function collided(a, b)
+    local rocket_left = a.x + 4
+    local rocket_right = rocket_left + 2
+    local rocket_top = a.y
+    local rocket_bottom = a.y + 8
+    
+    local plane_left = b.x
+    local plane_right = b.x + 16
+    local plane_top = b.y + 3
+    local plane_bottom = b.y + 16 - 6
+    
+    return not(
+        rocket_left > plane_right or
+        rocket_top > plane_bottom or
+        rocket_right < plane_left or
+        rocket_bottom < plane_top
+    )
+end
 __gfx__
 00000000cccccccc6777777dd666666dccccccc65ccccccccc777777ccccccccffffffffffffffffffffffffffffffff679a7751d69966117777777700000000
 00000000cccccccc67557751d6116611ccccccc6dccccccccc77777777cccccc1fffffffffffffffffffffffffffffff67887751d69a66117777777700000000
