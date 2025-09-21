@@ -41,15 +41,33 @@ function update_grid()
 		if btn(⬅️) then
 				move_left()
 		end
+		if btn(⬆️) then
+				move_up()
+		end
+		if btn(⬇️) then
+				move_down()
+		end
 end
 
 function draw_grid()
 local y = 40
 local x = 35
+local gx = 42
+local gy = 37
+local gx1 = gx+(12*4)
+local gy1 = gy+(10*4)
+line(gx,gy,gx1,gy) --top
+line(gx,gy,gx,gy1) --left
+line(gx,gy1,gx1,gy1) --bottom
+line(gx1,gy,gx1,gy1) --right
 		for i=1, #grid do
 				for j=1, #grid do
 						x += 12
-						print(grid[i][j],x,y)
+						if grid[i][j] == 0 then
+								print(" ",x,y)
+						else
+								print(grid[i][j],x,y)
+						end
 				end
 				x=35
 				y += 10
@@ -60,7 +78,7 @@ function move_right()
 		for i=1, #grid do
 				for pass=1, #grid -1 do
 						for j=#grid, 2, -1 do
-							swap(i,j-1,j)	
+							swap_h(i,j-1,j)	
 						end	
 				end
 		end
@@ -70,13 +88,33 @@ function move_left()
 		for i=1, #grid do
 				for pass=1, #grid -1 do
 						for j=1, #grid-1, 1 do
-							swap(i,j+1,j)	
+							swap_h(i,j+1,j)	
 						end	
 				end
 		end
 end
 
-function swap(row,c1,c2)
+function move_down()
+		for i=1, #grid do
+				for pass=1, #grid -1 do
+						for j=1, #grid-1, 1 do
+							swap_v(j,j+1,i)	
+						end	
+				end
+		end
+end
+
+function move_up()
+		for i=1, #grid do
+				for pass=1, #grid -1 do
+						for j=#grid, 2, -1 do
+							swap_v(j,j-1,i)	
+						end	
+				end
+		end
+end
+
+function swap_h(row,c1,c2)
 		if grid[row][c2] == grid[row][c1] then
 				grid[row][c1] += grid[row][c2]
 				grid[row][c2] = 0
@@ -85,6 +123,18 @@ function swap(row,c1,c2)
 				local tmp = grid[row][c1]
 				grid[row][c1] = grid[row][c2]
 				grid[row][c2] = tmp
+		end
+end
+
+function swap_v(r1,r2,col)
+		if grid[r1][col] == grid[r2][col] then
+				grid[r1][col] += grid[r2][col]
+				grid[r2][col] = 0
+		end
+		if grid[r2][col] == 0 then
+				local tmp = grid[r1][col]
+				grid[r1][col] = grid[r2][col]
+				grid[r2][col] = tmp
 		end
 end
 -->8
