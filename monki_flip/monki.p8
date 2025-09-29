@@ -4,7 +4,6 @@ __lua__
 --init
 function _init()
 		debug = true
-		state = "idle"
 		palt(0,false)
 		palt(14,true)
 		init_pillars()
@@ -33,46 +32,90 @@ function _draw()
 		end
 end
 -->8
---states
-
---falling state
-function falling()
-		for p in all(platforms) do
-		  if not is_on_pillar(monki, p) then
-		  		monki.y += 1
-		  else
-		  		monki.y = p.y - 16
-		  		monki.state = "idle"
-		  end
-		end
-end
+--animations
 
 function init_states()
-		local tick = 0
-		local frame = 1
-		local step = 12
-		local idle = {}
-		idle.sp = {1,33}
-		idle.t = tick
-		idle.f = frame
-		idle.s = step
-		monki.idle = idle
+		idle_state()
+		falling_state()
+		jumping_state()
 end
 
---idle state
-function on_platform()
-		monki.idle.t=(monki.idle.t+1)%monki.idle.s
-	 if (monki.idle.t==0) monki.idle.f=monki.idle.f%#monki.idle.sp+1
-		
-		for p in all(platforms) do
-		  if not is_on_pillar(monki, p) then
-		  		monki.state = "falling"
-		  end
+function idle_state()
+	local p={}
+ p.t,p.f,p.s=0,1,4
+ p.sp={1,33}
+ monki.idle = p
+end
+
+function falling_state()
+	local p={}
+ p.t,p.f,p.s=0,0,0
+ p.sp={35}
+ monki.falling = p
+end
+
+function jumping_state()
+	local p={}
+ p.t,p.f,p.s=0,0,0
+ p.sp={5}
+ monki.jumping = p
+end
+
+function update_animation()
+	local m = monki.state 
+ monki[m].t = (monki[m].t+1)%monki[m].s
+ if (monki[m].t==0) then
+ 		monki[m].f=monki[m].f%#monki[m].sp+1
+ end
+end
+
+function draw_animation()
+		local m = monki.state 
+		spr(monki[m].sp[monki[m].f],
+		monki.x,monki.y,2,2)
+end
+-->8
+--monki
+function init_monki()
+		monki={}
+		monki.sp = 1
+		monki.state = "jumping"
+		monki.x = 63
+		monki.y = 0
+		monki.w = 15
+		monki.h = 16
+		monki.p = false
+		init_states()
+end
+
+function update_monki()
+		if btnp(4) then
+--				jump()
 		end
+		if monki.state == "falling" then
+				monki.y += 2
+		elseif monki.state == "idle" then
+				
+		end
+		state_machine()
+		update_animation()
 end
 
-function draw_idle()
- 	spr(monki.idle.sp[monki.idle.f],monki.x,monki.y,2,2)
+function draw_monki()
+		draw_animation()
+end
+
+function state_machine()
+		--failling -> idle
+		if not monki.state == "jumping" then
+				for p in all(platforms) do
+						if not on_pillar(monki,p) then
+								monki.state = "falling"
+						else
+							 monki.state = "idle"
+						end
+				end
+		end				
 end
 -->8
 --pillars
@@ -111,59 +154,10 @@ function add_pillar(sp,x,y)
 		add(platforms,p)
 end
 -->8
---monki
-function init_monki()
-		monki={}
-		monki.sp = 1
-		monki.state = "falling"
-		monki.x = 63
-		monki.y = 0
-		monki.w = 15
-		monki.h = 16
-		monki.p = false
-		init_states()
-end
-
-function update_monki()
-		if btnp(4) then
-				jump()
-		end
-		if monki.state == "falling" then
-				falling()
-		elseif monki.state == "idle" then
-				on_platform()
-		end
-end
-
-function draw_monki()
-		if monki.state == "idle" then
-				draw_idle()
-		else
-			spr(
-					monki.sp, 
-					monki.x, 
-					monki.y, 
-					2, 
-					2)
-		end
-end
-
-function jump()
-		local jump_height = 16
-		local dy = -1
-		local g = .6
-		for i=1, jump_height do
-				monki.y += dy*g
-				dy += .2
-		end
-		monki.state = "falling"
-end
-
--->8
 --collision
 
-function is_on_pillar(a, b)
-		offset_right = 7
+function on_pillar(a, b)
+		offset_right = 6
 		offset_left = 2
 		return not (
 		a.x + offset_right> b.x + b.w
@@ -173,42 +167,28 @@ function is_on_pillar(a, b)
 		)
 end
 -->8
--- board
---	 spr(35,112,63,2,2)
---	 spr(35,100,63,2,2)
--->8
-
--->8
-
--->8
 --dbg
 function init_debug()
---		init_idle()
+monki.state = "falling"
 end
 
 function update_debug()
-
 if btn(⬅️) then monki.x -= 1 end
 if btn(➡️) then monki.x += 1 end
 if btn(⬆️) then monki.y -= 1 end
 if btn(⬇️) then monki.y += 1 end
-
---		if state == "idle" then
---				idle_animation()
---		end
 end
 
 function draw_debug()
 		for p in all(platforms) do
-			print(tostr(is_on_pillar(monki, p))
+			print(tostr(on_pillar(monki, p))
 			.."\nstate: "..monki.state
+			.."\nt: "..monki[monki.state].t
+			.."\nf: "..monki[monki.state].f
+			.."\ns: "..monki[monki.state].s
+			.."\nsp: "..monki[monki.state].sp[monki[monki.state].f]
 			,0,0)		
 		end
-		
---		if state == "idle" then
---				draw_idle()
---		else spr(1,0,0,2,2)
---		end
 end
 __gfx__
 00000000eeeeeee0000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000eeeee888e888e888e888e5555555555555555555555555555555500000000
@@ -227,19 +207,19 @@ __gfx__
 00000000eeeeee04000040eeee04400400400eeeee044000040000eeeeeee040000040eeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
 00000000eeeeee0f0ee0f0eeeee00e04f04f0eeeeee00e0404f0f0eeeeeee0f0eee0f0eeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
 00000000eeeeee000ee000eeeeeeeee000000eeeeeeeeee000000eeeeeeee000eee000eeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
-00000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeeeeee0000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeeeee044440eeeeddddddddddddddddeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeee004044040eeed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eee0f0404404f0eed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000e000f044444400eed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-000000000444004400040eeed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-000000000400e000fff000eed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000040e04440004440ed666666666666666eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000040e04044444040eddddddddddddddddeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-0000000004400f0444440f0ed555555555555555eeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000e04400044444400eddddddddddddddddeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000ee00e004444440eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeeeee04000040eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeeeee0f0ee0f0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
-00000000eeeeee000ee000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee00000000000000000000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeeeeeeeeeeeeeeeeeeee0000eeeee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeeee0000eeeeeeeeeee044440eeee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeee044440eeeee0ee0040440400ee0000000000000000dddddddddddddddd0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeee004044040eee0400f04044040f0e0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eee0f0404404f0ee040040444444040e0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000e000f044444400ee040040440004040e0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+000000000444004400040eee04004000fff0040e0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+000000000400e000fff000ee040044440004440e0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000040e04440004440e040e0044444440ee0000000000000000d6666666666666660000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000040e04044444040e040ee044444440ee0000000000000000dddddddddddddddd0000000000000000eeeee5dddd5eeeee000000000000000000000000
+0000000004400f0444440f0e04400044444440ee0000000000000000d5555555555555550000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000e04400044444400ee0444044444440ee0000000000000000dddddddddddddddd0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000ee00e004444440eeee000044444440ee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeee04000040eeeeeee040000040ee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeee0f0ee0f0eeeeeee0f0eee0f0ee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
+00000000eeeeee000ee000eeeeeee000eee000ee0000000000000000eeeeeeeeeeeeeeee0000000000000000eeeee5dddd5eeeee000000000000000000000000
