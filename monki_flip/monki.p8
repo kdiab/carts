@@ -130,10 +130,8 @@ end
 
 function idle_state_m()
 		if monki.state == "idle" then
-				for p in all(platforms) do
-						if not on_pillar(monki,p) then
+				if not on_platform() then
 								monki.state = "falling"
-						end
 				end
 		end
 end
@@ -143,25 +141,20 @@ function jumping_state_m()
 		  monki.x += monki.vx
 		  monki.y += monki.vy
 		  monki.vy += gravity
-		  for p in all(platforms) do
-      if monki.vy > 0 and on_pillar(monki,p) then
-      				monki.y = p.y - monki.h
-          monki.vy = 0
-          monki.vx = 0
-          monki.state = "idle"
-      end
-    end
+				if on_platform() then
+						monki.vy = 0
+      monki.vx = 0
+      monki.state = "idle"
+				end        
 		end
 end
 
 
 function falling_state_m()
 		if monki.state == "falling" then
-						monki.y += 1
-				for p in all(platforms) do
-						if on_pillar(monki,p) then
-								monki.state = "idle"
-						end
+				monki.y += 3
+				if on_platform() then
+						monki.state = "idle"
 				end
 		end
 end
@@ -190,12 +183,25 @@ function jump()
 		  is_holding = is_down
   end
 end
+
+function on_platform()
+		local on_any_platform = false
+		for p in all(platforms) do
+		  if on_pillar(monki,p) then
+		    on_any_platform = true
+		    monki.y = p.y - monki.h
+		    return true 
+		  end
+		end
+		return false
+end
 -->8
 --pillars
 function init_pillars()
 		platforms = {}
 		pillars = {}
 		add_pillar(11,63,83)
+		add_pillar(13,33,53)
 end
 
 function update_pillars()
@@ -232,17 +238,22 @@ end
 function on_pillar(a, b)
 		offset_right = 6
 		offset_left = 2
-		return not (
-		a.x + offset_right> b.x + b.w
-	 or a.x + a.w < b.x + offset_left
-		or a.y > b.y + b.h
-		or a.y + a.h < b.y
-		)
+		if a.vy and a.vy < 0 then
+				return false
+		end
+		
+	 return not (
+	   a.x + offset_right > b.x + b.w
+	   or a.x + a.w < b.x + offset_left
+	   or a.y + a.h < b.y
+	   or a.y + a.h > b.y + 4
+	 )
 end
 -->8
 --dbg
 function init_debug()
-monki.state = "idle"
+	monki.state = "idle"
+	print_debug = false
 	p={}
  p.a=0
  p.s=5
@@ -256,21 +267,32 @@ if btn(⬇️) then monki.y += 1 end
 end
 
 function draw_debug()
-		local m = monki.state
-		for p in all(platforms) do
-			print(tostr(on_pillar(monki, p))
-			.."\nstate: "..m
-			.."\nt: "..monki[m].t
-			.."\nf: "..monki[m].f
-			.."\ns: "..monki[m].s
-			.."\nsp: "..monki[m].sp[monki[m].f]
-			.."\noneshot: "..tostr(monki[m].oneshot)
-			.."\nis_holding: "..tostr(is_holding)
-			.."\njump_power: "..jump_power
-			.."\nvx: "..monki.vx
-			.."\nvy: "..monki.vy
-			,0,0)		
+		if print_debug then
+				local m = monki.state
+				print(tostr(on_platform_dbg())
+				.."\nstate: "..m
+				.."\nt: "..monki[m].t
+				.."\nf: "..monki[m].f
+				.."\ns: "..monki[m].s
+				.."\nsp: "..monki[m].sp[monki[m].f]
+				.."\noneshot: "..tostr(monki[m].oneshot)
+				.."\nis_holding: "..tostr(is_holding)
+				.."\njump_power: "..jump_power
+				.."\nvx: "..monki.vx
+				.."\nvy: "..monki.vy
+				,0,0)
 		end
+end
+
+function on_platform_dbg()
+		local on_any_platform = false
+		for p in all(platforms) do
+		  if on_pillar(monki,p) then
+		    on_any_platform = true
+		    return true 
+		  end
+		end
+		return false
 end
 __gfx__
 00000000eeeeeee0000eeeeeeeeeeeeeeeeeeeeeeeeeeee0000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5555555555555555555555555555555500000000
