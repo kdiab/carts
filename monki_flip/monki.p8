@@ -38,6 +38,7 @@ function init_states()
 		idle_state()
 		falling_state()
 		jumping_state()
+		ready_state()
 end
 
 function idle_state()
@@ -50,7 +51,7 @@ end
 function falling_state()
 	local p={}
  p.t,p.f,p.s=0,0,0
- p.sp={35}
+ p.sp={37}
  monki.falling = p
 end
 
@@ -61,12 +62,26 @@ function jumping_state()
  monki.jumping = p
 end
 
+function ready_state()
+	local p={}
+ p.t,p.f,p.s=0,1,6
+ p.sp={1,35,3}
+ p.oneshot = false
+ monki.ready = p
+end
+
 function update_animation()
 	local m = monki.state 
  monki[m].t = (monki[m].t+1)%monki[m].s
- if (monki[m].t==0) then
- 		monki[m].f=monki[m].f%#monki[m].sp+1
- end
+	if (monki[m].t==0) then
+			if monki[m].oneshot then
+					if monki[m].f == #monki[m].sp then
+							monki[m].f = #monki[m].sp
+					end
+			else		
+				 monki[m].f=monki[m].f%#monki[m].sp+1
+			end
+	end
 end
 
 function draw_animation()
@@ -79,6 +94,7 @@ end
 -->8
 --monki
 function init_monki()
+		is_holding = false
 		monki={}
 		monki.sp = 1
 		monki.state = "falling"
@@ -106,7 +122,8 @@ function state_machine()
 		--failling -> idle
 		falling_state_m()
 		--idle -> failling 
-		idle_state_m()				
+		idle_state_m()		
+		jump()		
 end
 
 function idle_state_m()
@@ -128,6 +145,19 @@ function falling_state_m()
 						end
 				end
 		end
+end
+
+function jump()
+  local is_down = btn(z)
+  if not monki.state == "falling" then
+		  if is_down then
+		  		monki.state = "ready"
+		  elseif is_holding and not is_down then
+						-- get in jump state
+						monki.state = "jumping"
+		  end
+		end
+  is_holding = is_down
 end
 -->8
 --pillars
@@ -181,7 +211,7 @@ end
 -->8
 --dbg
 function init_debug()
-monki.state = "jumping"
+monki.state = "ready"
 	p={}
  p.a=0
  p.s=5
@@ -203,6 +233,7 @@ function draw_debug()
 			.."\nf: "..monki[m].f
 			.."\ns: "..monki[m].s
 			.."\nsp: "..monki[m].sp[monki[m].f]
+			.."\noneshot: "..tostr(monki[m].oneshot)
 			,0,0)		
 		end
 end
@@ -220,22 +251,22 @@ __gfx__
 0000000004400f0444440f0ee040e0404444040e04000044444440eee04004044444040e0f00040f040040eeeeeee5dddd5eeeeee555e5dddd5e555e00000000
 00000000e04400044444400ee04400f044440f0e04444044444440eee04004400000440e000f044044440eeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
 00000000ee00e004444440eeee0440040440e0eee0000044444440eee044044f040f440e0f04404000f0eeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
-00000000eeeeee04000040eeee04400400400eeeeeeee040000040eeee044000040000eee004440ee00eeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
-00000000eeeeee0f0ee0f0eeeee00e04f04f0eeeeeeee0f0eee0f0eeeee00e0404f0f0eeeee000eeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
+00000000eeeeee04000040eeeee0000400400eeeeeeee040000040eeee044000040000eee004440ee00eeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
+00000000eeeeee0f0ee0f0eeeeeeee04f04f0eeeeeeee0f0eee0f0eeeee00e0404f0f0eeeee000eeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
 00000000eeeeee000ee000eeeeeeeee000000eeeeeeee000eee000eeeeeeeee000000eeeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeee5dddd5eeeee00000000
-00000000eeeeeeeeeeeeeeeeeeeeeee0000eeeee888e888e888e888eeeeeeeeeeeeeeeeeeee000000eeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
-00000000eeeeeee0000eeeeeeeeeee044440eeee8eee8e8e8eee8eeeeeeeeeeeee000eeeee0f0f4040e00eeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
-00000000eeeeee044440eeeee0ee0040440400ee888e888e88ee88eeeeeee00ee044400eee000040000440eeeeeee5dddd5eeeeedddddddddddddddd00000000
-00000000eeee004044040eee0400f04044040f0eee8e8e8e8eee8eeeeeee0f00040440f0e044f040f440440eeeeee5dddd5eeeeed66666666666666600000000
-00000000eee0f0404404f0ee040040444444040e888e8e8e8eee888eeee044440440f000e04400000440040eeeeee5dddd5eeeeed66666666666666600000000
-00000000e000f044444400ee040040440004040eeeeeeeeeeeeeeeeeee040040f04000f0e04044444040040eeeeee5dddd5eeeeed66666666666666600000000
-000000000444004400040eee04004000fff0040eeeeeeeeeeeeeeeeeee044440f0404440ee0440004400040eeeeee5dddd5eeeeed66666666666666600000000
-000000000400e000fff000ee040044440004440eeeeeeeeeeeeeeeeeee044440f0400000eee00fff0000440eeeeee5dddd5eeeeed66666666666666600000000
-00000000040e04440004440e040e0044444440eeeeeeeeeeeeeeeeeeee0400440440f040eee04000440000eeeeeee5dddd5eeeeed66666666666666600000000
-00000000040e04044444040e040ee044444440eeeeeeeeeeeeeeeeeeeee044440404400eee004444440f0eeeeeeee5dddd5eeeeedddddddddddddddd00000000
-0000000004400f0444440f0e04400044444440eeeeeeeeeeeeeeeeeeeeee0000004440eeee0f4044040f0eeeeeeee5dddd5eeeeed55555555555555500000000
-00000000e04400044444400ee0444044444440eeeeeeeeeeeeeeeeeeeeee0ff00000040eeee040440400eeeeeeeee5dddd5eeeeedddddddddddddddd00000000
-00000000ee00e004444440eeee000044444440eeeeeeeeeeeeeeeeeeeeeee0004000440eeeee044440eeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
-00000000eeeeee04000040eeeeeee040000040eeeeeeeeeeeeeeeeeeeeeeeee0444440eeeeeee0000eeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
-00000000eeeeee0f0ee0f0eeeeeee0f0eee0f0eeeeeeeeeeeeeeeeeeeeeeeeee00000eeeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
-00000000eeeeee000ee000eeeeeee000eee000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeeeeeeeeeeeeeeeeeeee0000eeeeeeeeeeee0000eeeeeeeeeeeeeeeeeeeeeeee000000eeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeeee0000eeeeeeeeeee044440eeeeeeeeee044440eeeeeeeeeeeeee000eeeee0f0f4040e00eeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeee044440eeeeeeee004044040eeee0ee0040440400eeeeeee00ee044400eee000040000440eeeeeee5dddd5eeeeedddddddddddddddd00000000
+00000000eeee004044040eeeeee0f0404404f0ee0400f04044040f0eeeee0f00040440f0e044f040f440440eeeeee5dddd5eeeeed66666666666666600000000
+00000000eee0f0404404f0eeeee0f044444400ee040040444444040eeee044440440f000e04400000440040eeeeee5dddd5eeeeed66666666666666600000000
+00000000e000f044444400eeee00004400040eee040040440004040eee040040f04000f0e04044444040040eeeeee5dddd5eeeeed66666666666666600000000
+000000000444004400040eeee0440e00fff00eee04004000fff0040eee044440f0404440ee0440004400040eeeeee5dddd5eeeeed66666666666666600000000
+000000000400e000fff000eee040e044000440ee040044440004440eee044440f0400000eee00fff0000440eeeeee5dddd5eeeeed66666666666666600000000
+00000000040e04440004440ee040e0444444440e040e0044444440eeee0400440440f040eee04000440000eeeeeee5dddd5eeeeed66666666666666600000000
+00000000040e04044444040ee040e0444444040e040ee044444440eeeee044440404400eee004444440f0eeeeeeee5dddd5eeeeedddddddddddddddd00000000
+0000000004400f0444440f0ee04400f444440f0e04400044444440eeeeee0000004440eeee0f4044040f0eeeeeeee5dddd5eeeeed55555555555555500000000
+00000000e04400044444400eee0440044440e0eee0444044444440eeeeee0ff00000040eeee040440400eeeeeeeee5dddd5eeeeedddddddddddddddd00000000
+00000000ee00e004444440eeeee0000400400eeeee000044444440eeeeeee0004000440eeeee044440eeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeee04000040eeeeeee00400400eeeeeeee040000040eeeeeeeee0444440eeeeeee0000eeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeee0f0ee0f0eeeeeeee04f04f0eeeeeeee0f0eee0f0eeeeeeeeee00000eeeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
+00000000eeeeee000ee000eeeeeeeee000000eeeeeeee000eee000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5dddd5eeeeeeeeeeeeeeeeeeeee00000000
