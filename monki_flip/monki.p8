@@ -39,6 +39,7 @@ function init_states()
 		falling_state()
 		jumping_state()
 		ready_state()
+		walking_state()
 end
 
 function idle_state()
@@ -68,6 +69,13 @@ function ready_state()
  p.sp={1,35,3}
  p.oneshot = true
  monki.ready = p
+end
+
+function walking_state()
+	local p={}
+ p.t,p.f,p.s=0,1,4
+ p.sp={1,45}
+ monki.walking = p
 end
 
 function update_animation()
@@ -127,6 +135,7 @@ function state_machine()
 		idle_state_m()
 		jumping_state_m()
 		jump()
+		walking_state_m()
 end
 
 function idle_state_m()
@@ -173,6 +182,10 @@ function jump()
 		  		if jump_power < 6 then
 		  				jump_power = 6
 		  		end
+		  		if btn(⬅️) or btn(➡️) then
+								reset_jump()
+								return
+						end
 		  elseif is_holding and not is_down then
 						-- get in jump state
 						monki.ready.f = 1
@@ -183,6 +196,44 @@ function jump()
 		  end
 		  is_holding = is_down
   end
+end
+
+function walking_state_m()
+		if monki.state == "jumping"
+  or monki.state == "falling"
+  or monki.state == "ready"
+  then
+  		return
+  end
+  
+  local is_down = btn(⬅️) or btn(➡️)
+		if is_down then
+				monki.state = "walking"
+				if not on_platform() then
+						monki.state = "falling"
+				end
+				if btn(⬅️) then
+						monki.x -= 1
+				end
+				if btn(➡️) then
+						monki.x += 1
+				end
+		else
+				if on_platform() then
+						monki.state = "idle"
+				else
+						monki.state = "falling"
+				end
+		end
+end
+
+function reset_jump()
+		monki.vy = 0
+		monki.vx = 0
+		jump_power = 0
+		monki.ready.f = 1
+		is_holding = false
+		monki.state = "walking"
 end
 
 function on_platform()
@@ -237,8 +288,8 @@ end
 --collision
 
 function on_pillar(a, b)
-		offset_right = 6
-		offset_left = 2
+		offset_right = 7
+		offset_left = 3
 		if a.vy and a.vy < 0 then
 				return false
 		end
@@ -261,12 +312,6 @@ function init_debug()
 end
 
 function update_debug()
-if btn(⬅️) then
-monki.x -= 1 
-end
-if btn(➡️) then 
-monki.x += 1 
-end
 if btn(⬆️) then monki.y -= 1 end
 if btn(⬇️) then monki.y += 1 end
 end
@@ -315,7 +360,7 @@ __gfx__
 00000000ee00e004444440eee04400f044440f0ee0000044444440eee044044f040f440e0f04404000f0eeeeeeeee5ddd65eeeeeeeeee5ddd65eeeee00000000
 00000000eeeeee04000040eeee0440040440000eeeeee040000040eeee044000040000eee004440ee00eeeeeeeeee5ddd65eeeeeeeeee5ddd65eeeee00000000
 00000000eeeeee0f0ee0f0eeeee00004f04f0eeeeeeee0f0eee0f0eeeee00e0404f0f0eeeee000eeeeeeeeeeeeeee5ddd65eeeeeeeeee5ddd65eeeee00000000
-00000000eeeeee000ee000eeeeeeeee000000eeeeeeee000eee000eeeeeeeee000000eeeeeeeeeeeeeeeeeeeeeeee5ddd65eeeeeeeeee5ddd65eeeee00000000
+00000000eeeeee000ee000eeeeeeee0000000eeeeeeee000eee000eeeeeeeee000000eeeeeeeeeeeeeeeeeeeeeeee5ddd65eeeeeeeeee5ddd65eeeee00000000
 00000000eeeeeeeeeeeeeeeeeeeeeee0000eeeeeeeeeeee0000eeeeeeeeeeeeeeeeeeeeeeee000000eeeeeeeeeeee5ddd65eeeeeeeeeeeeeeeeeeeee00000000
 00000000eeeeeee0000eeeeeeeeeee044440eeeeeeeeee044440eeeeeeeeeeeeee000eeeee0f0f4040e00eeeeeeee5ddd65eeeeeeeeeeee0000eeeee00000000
 00000000eeeeee044440eeeeeeee004044040eeee0ee0040440400eeeeeee00ee044400eee000040000440eeeeeee5ddd65eeeeeeeeeee044440eeee00000000
@@ -331,4 +376,4 @@ __gfx__
 00000000ee00e004444440eeeee0000400400eeeee000044444440eeeeeee0004000440eeeee044440eeeeeeeeeee5ddd65eeeeeee00ee0044440eee00000000
 00000000eeeeee04000040eeeeeee00400400eeeeeeee040000040eeeeeeeee0444440eeeeeee0000eeeeeeeeeeee5ddd65eeeeeeeeeeee040040eee00000000
 00000000eeeeee0f0ee0f0eeeeeeee04f04f0eeeeeeee0f0eee0f0eeeeeeeeee00000eeeeeeeeeeeeeeeeeeeeeeee5ddd65eeeeeeeeeeee0f00f0eee00000000
-00000000eeeeee000ee000eeeeeeeee000000eeeeeeee000eee000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5ddd65eeeeeeeeeeee000000eee00000000
+00000000eeeeee000ee000eeeeeeee0000000eeeeeeee000eee000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee5ddd65eeeeeeeeeeee000000eee00000000
