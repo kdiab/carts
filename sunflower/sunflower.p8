@@ -272,6 +272,7 @@ function init_sunflower()
 		growth_hormone=1
 		photosynthesis=1
 		bonus = "800"
+		new_bonus = "800"
 		counter = 1
 end
 
@@ -288,7 +289,7 @@ function update_sunflower()
 				i = 0
 				counter += 1
 				total_seeds = stringadd(total_seeds,bonus)
-				bonus = stringmul(bonus,tostr(counter))
+				bonus = stringmul(new_bonus,tostr(counter))
 				seeds = {}
 				show_motivational()
 		end
@@ -534,7 +535,8 @@ function newgame_plus()
 		fertilizer=1
 		heavy_seeds=1
 		growth_hormone=1
-		bonus = stringmul("800",tostr(photosynthesis))
+		new_bonus = stringmul("800",tostr(photosynthesis*3))
+		bonus = new_bonus
 		counter = 1
 		reset_upgrades()
 		start_bloom_animation()
@@ -998,10 +1000,13 @@ function init_dbg()
 --		growth_hormone=1
 --		photosynthesis=1
 		total_seeds = "999999990"
-state = "start"
+state = "game"
 end
 
 function update_dbg()
+if btnp(⬅️) then
+	total_seeds=stringadd(total_seeds,"1000000")
+	end
 end
 
 function draw_dbg()
