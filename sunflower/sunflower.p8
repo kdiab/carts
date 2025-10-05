@@ -4,7 +4,7 @@ __lua__
 --init
 function _init()
 		debug = true
-		state = "game"
+		state = "start"
 		menu = false
 		palt(0,false)
 		palt(14,true)
@@ -12,11 +12,52 @@ function _init()
 		init_upgrades()
 		init_particles()
 		init_john()
+		init_story()
 		if debug then
 				init_dbg()
 		end
 end
 
+--update & draw
+
+function _update()
+		if state == "game" then
+				update_menu()
+				update_sunflower()
+				update_particles()
+				update_motivational()
+		elseif state == "start" then
+				update_start()
+		elseif state == "intro" then
+				update_intro()
+		elseif state == "end" then
+				update_end()
+		end
+		if debug then
+				update_dbg()
+		end
+end
+
+function _draw()
+		cls()
+		if state == "game" then
+				draw_sunflower()
+				draw_particles()
+				draw_motivational()
+				draw_menu()
+		elseif state == "start" then
+				draw_start()
+		elseif state == "intro" then
+				draw_intro()
+		elseif state == "end" then
+				draw_end()
+		end
+		if debug then
+				draw_dbg()
+		end
+end
+
+--misc functions
 
 -- string math for big num
 --function stringadd(a, b)
@@ -148,45 +189,49 @@ function biggte(a, b)
   return not biglt(a, b)
 end
 -->8
---update & draw
+--game menus
 
-function _update()
-		if state == "game" then
-				update_menu()
-				update_sunflower()
-				update_particles()
-				update_motivational()
-		elseif state == "start" then
-				update_start()
-		elseif state == "intro" then
-				update_intro()
-		elseif state == "end" then
-				update_end()
-		end
-		if debug then
-				update_dbg()
+--start
+function update_start()
+		if btnp(❎) then
+				state = "intro"
+				start_story()
 		end
 end
 
-function _draw()
-		cls(1)
-		if state == "game" then
-				draw_sunflower()
-				draw_particles()
-				draw_motivational()
-				draw_menu()
-		elseif state == "start" then
-				draw_start()
-		elseif state == "intro" then
-				draw_intro()
-		elseif state == "end" then
-				draw_end()
-		end
-		if debug then
-				draw_dbg()
+function draw_start()
+		print("press ❎ to start",24,44,7)
+		print("\fccontrols",42,74,7)
+		print("❎ pollinate",34,84,7)
+		print("z/🅾️ open/close shop",20,92,7)
+		print("⬆️/⬇️ navigate shop",22,100,7)
+end
+
+--intro
+
+function update_intro()
+		update_john()
+		update_story()
+		if not story_active then
+			 if btnp(❎) then
+			 		state = "game"
+			 end
 		end
 end
 
+function draw_intro()
+		draw_john()
+		draw_story()
+		if not story_active then
+			 print("press ❎ to start",24,24,7)
+		end
+end
+
+--tutorial
+-- i think the game is self explanatory
+-- will consider
+
+--end
 
 -->8
 --sunflower
@@ -223,7 +268,7 @@ function update_sunflower()
 		end
 		if btnp(❎) and not menu then
 		  spawn_seed()
-		  increment_seeds(1+fertilizer)
+		  increment_seeds((1+fertilizer)*photosynthesis)
 		end
 end
 
@@ -682,8 +727,8 @@ function update_john()
 end
 
 function draw_john()
-	local x = 64
-	local y = 64
+	local x = 112
+	local y = 84
 	local legs = 45
  spr(john[frame],x,y,2,2)
  spr(legs,x,y+16,2,2)
@@ -729,6 +774,42 @@ function draw_motivational()
     print(motiv_text, 69 - text_width/2, motiv_y, c)
   end
 end
+
+function init_story()
+  story_text = "\f6farmer john:\n\n\f7the world is dying...\ndarkness spreads \nacross the land.\nonly one thing can save us: \n\f8one billion sunflower seeds!\n\f7their golden light will\nrestore hope to humanity.\ngrow them. save the world."
+  story_index = 0
+  story_timer = 0
+  story_active = false
+  story_speed = 2
+end
+
+function start_story()
+  story_index = 0
+  story_timer = 0
+  story_active = true
+end
+
+function update_story()
+  if story_active then
+    story_timer += 1
+    
+    if story_timer >= story_speed then
+      story_index += 1
+      story_timer = 0
+      
+      if story_index >= #story_text then
+        story_active = false
+      end
+    end
+  end
+end
+
+function draw_story()
+  if story_active or story_index > 0 then
+    local revealed = sub(story_text, 1, story_index)
+    print(revealed, 10, 40, 7)
+  end
+end
 -->8
 --dbg
 function init_dbg()
@@ -736,11 +817,11 @@ function init_dbg()
 --				spawn_seed()
 --		end
 --juice it
-		fertilizer=30
-		heavy_seeds=50
-		growth_hormone=1
-		photosynthesis=1
-		total_seeds = "1000000"
+--		fertilizer=30
+--		heavy_seeds=50
+--		growth_hormone=1
+--		photosynthesis=1
+--		total_seeds = "1000000"
 end
 
 function update_dbg()
