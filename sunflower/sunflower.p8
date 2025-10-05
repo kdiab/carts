@@ -324,7 +324,7 @@ function init_upgrades()
 						y=y+80,
 						upgrade="photosynthesis+",
 						cost="1000000",
-						cost_mult = 0,
+						cost_mult = "2",
 						desc="start over but gain \n+100% boost!",
 						m=32000,
 						lvl=photosynthesis
@@ -417,6 +417,7 @@ function buy_upgrade(u)
       growth_hormone += 1
       u.cost = stringmul(u.cost, u.cost_mult)
     elseif u.upgrade == "photosynthesis+" then
+      u.cost = stringmul(u.cost, u.cost_mult)
       photosynthesis += 1
       newgame_plus()
     end
@@ -478,8 +479,8 @@ function reset_upgrades()
 						x=x,
 						y=y+80,
 						upgrade="photosynthesis+",
-						cost="1000000",
-						cost_mult = 0,
+						cost=upgrades[4].cost,
+						cost_mult = 2,
 						desc="start over but gain \n+100% boost!",
 						m=32000,
 						lvl=photosynthesis
@@ -655,8 +656,8 @@ function init_dbg()
 --				spawn_seed()
 --		end
 --juice it
-		fertilizer=1
-		heavy_seeds=1
+		fertilizer=30
+		heavy_seeds=50
 		growth_hormone=1
 		photosynthesis=1
 		total_seeds = "1000000"
