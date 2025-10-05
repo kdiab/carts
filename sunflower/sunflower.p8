@@ -10,6 +10,7 @@ function _init()
 		palt(15,true)
 		init_sunflower()
 		init_upgrades()
+		init_particles()
 		if debug then
 				init_dbg()
 		end
@@ -141,12 +142,17 @@ end
 function biglt(a, b) 
   return biggt(b, a)
 end
+
+function biggte(a, b)
+  return not biglt(a, b)
+end
 -->8
 --update & draw
 
 function _update()
 		update_menu()
 		update_sunflower()
+		update_particles()
 		if debug then
 				update_dbg()
 		end
@@ -155,6 +161,7 @@ end
 function _draw()
 		cls(1)
 		draw_sunflower()
+		draw_particles()
 		draw_menu()
 		if debug then
 				draw_dbg()
@@ -190,7 +197,7 @@ function update_sunflower()
 		if i >= 1080 then
 				i = 0
 				counter += 1
-				stringadd(total_seeds,bonus)
+				total_seeds = stringadd(total_seeds,bonus)
 				bonus = stringmul("800",tostr(counter))
 				seeds = {}
 		end
@@ -222,7 +229,7 @@ function spawn_seed()
   local scale = 1.3
   local s = 0
   
-  if i == 91 then  -- calculate offset once at transition
+  if i == 91 then
     transition_offset = 1.2 * sqrt(90) - 1.9 * sqrt(91)
   end
   
@@ -237,6 +244,7 @@ function spawn_seed()
   local y = center_y + sin(angle) * distance
   local c = flr(rnd(2) + 9)
   add(seeds, {x=x,y=y,s=s,c=c})
+  spawn_particles(x,y)
   i += 1
 end
 
@@ -306,7 +314,7 @@ function init_upgrades()
 						y=y+48,
 						upgrade="growth hormone",
 						cost="10000",
-						cost_mult="25000",
+						cost_mult="3",
 						desc="exponential \nproduction boost!",
 						m=32000,
 						lvl=growth_hormone
@@ -320,8 +328,7 @@ function init_upgrades()
 						desc="start over but gain \n+100% boost!",
 						m=32000,
 						lvl=photosynthesis
-				},
-				
+				}
 		}
 end
 
@@ -355,6 +362,7 @@ function draw_menu()
 		local active_c = 12
 		local active_d = 6
 		local inactive = 13
+		local max_c = 9
 		if menu then
 				rectfill(x1,y1,x2,y2,0)
 				rect(x1,y1,x2,y2,6)
@@ -365,11 +373,19 @@ function draw_menu()
 						local u = upgrades[i]
 						if active == i then
 								print(u.upgrade,u.x,u.y,active_u)
-								print("cost: "..u.cost.." lvl: "..u.lvl,u.x,u.y+8,active_c)
+								if u.m == u.lvl then
+										print("lvl: "..u.lvl.." max.",u.x,u.y+8,max_c)
+								else
+										print("cost: "..u.cost.." lvl: "..u.lvl,u.x,u.y+8,active_c)
+								end
 								print(u.desc,u.x,u.y+16,active_d)
 						else
 								print(u.upgrade,u.x,u.y,inactive)
-								print("cost: "..u.cost.." lvl: "..u.lvl,u.x,u.y+8,inactive)
+								if u.m == u.lvl then
+										print("lvl: "..u.lvl.." max.",u.x,u.y+8,inactive)
+								else
+										print("cost: "..u.cost.." lvl: "..u.lvl,u.x,u.y+8,inactive)
+								end
 								print(u.desc,u.x,u.y+16,inactive)
 						end
 				end
@@ -385,21 +401,251 @@ function active_arrow(u)
 end
 
 function buy_upgrade(u)
-  if biggt(total_seeds, u.cost) then
+		if u.m == u.lvl then
+				return
+		end
+  if biggte(total_seeds, u.cost) then
     total_seeds = stringsub(total_seeds, u.cost) 
-    u.cost = stringadd(u.cost, u.cost_mult)
   		u.lvl += 1
   		if u.upgrade == "fertilizer" then
       fertilizer += 1
+      u.cost = stringadd(u.cost, u.cost_mult)
     elseif u.upgrade == "heavy seeds" then
       heavy_seeds += 1
+      u.cost = stringadd(u.cost, u.cost_mult)
     elseif u.upgrade == "growth hormone" then
       growth_hormone += 1
+      u.cost = stringmul(u.cost, u.cost_mult)
+    elseif u.upgrade == "photosynthesis+" then
+      photosynthesis += 1
+      newgame_plus()
     end
   end
 end
--->8
 
+function newgame_plus()
+		seeds = {}
+		particles = {}
+		active = 1
+		menu = false
+		i=0
+		total_seeds = "50"
+		timer = 0
+		fertilizer=1
+		heavy_seeds=1
+		growth_hormone=1
+		bonus = "800"
+		counter = 1
+		reset_upgrades()
+		start_bloom_animation()
+end
+
+function reset_upgrades()
+		local x=6
+		local y=10
+		upgrades = {
+				{
+						x=x,
+						y=y,
+						upgrade="fertilizer",
+						cost="15",
+						cost_mult="50",
+						desc="+1 seed per second",
+						m=30,
+						lvl=fertilizer
+				},
+				{
+						x=x,
+						y=y+24,
+						cost="500",
+						cost_mult="1000",
+						upgrade="heavy seeds",
+						desc="+1 seed per pod",
+						m=50,
+						lvl=heavy_seeds
+				},
+				{
+						x=x,
+						y=y+48,
+						upgrade="growth hormone",
+						cost="10000",
+						cost_mult="3",
+						desc="exponential \nproduction boost!",
+						m=32000,
+						lvl=growth_hormone
+				},
+				{
+						x=x,
+						y=y+80,
+						upgrade="photosynthesis+",
+						cost="1000000",
+						cost_mult = 0,
+						desc="start over but gain \n+100% boost!",
+						m=32000,
+						lvl=photosynthesis
+				}
+		}
+end
+-->8
+--particles
+function init_particles()
+  particles = {}
+  fall_particles = {}
+  falling = false
+  bloom_particles = {}
+  blooming = false
+end
+
+function init_fall_particles()
+
+end
+
+function update_particles()
+		update_seed_particles()
+  update_fall_particles()
+  update_bloom_particles()
+end
+
+function draw_particles()
+		draw_seed_particles()
+		draw_fall_particles()
+		draw_bloom_particles()
+end
+
+function spawn_particles(x, y)
+  for i = 1, 1 do
+    add(particles, {
+      x = x,
+      y = y,
+      vx = rnd(2) - 1,
+      vy = rnd(2) - 1,
+      life = 15,
+      c = flr(rnd(2) + 9)
+    })
+  end
+end
+
+function start_fall_animation()
+  falling = true
+  fall_particles = {}
+  
+  for i = 1, 500 do
+    add(fall_particles, {
+      x = rnd(128),
+      y = rnd(0),
+      vy = 1 + rnd(2),
+      c = flr(rnd(2) + 9),
+      s = flr(rnd(2))
+    })
+  end
+end
+
+function start_bloom_animation()
+  blooming = true
+  bloom_particles = {}
+  
+  local center_x = 63
+  local center_y = 63
+  
+  for i = 1, 1000 do
+    local angle = rnd(1)  
+    local speed = 1 + rnd(7)
+    
+    add(bloom_particles, {
+      x = center_x,
+      y = center_y,
+      vx = cos(angle) * speed,
+      vy = sin(angle) * speed,
+      life = 30 + rnd(20),  
+      c = flr(rnd(3) + 8),
+      s = 1
+    })
+  end
+end
+
+function update_bloom_particles()
+  if blooming then
+    for p in all(bloom_particles) do
+      p.x += p.vx
+      p.y += p.vy
+      p.vx *= 0.95
+      p.vy *= 0.95
+      p.life -= 1
+      
+      if p.life <= 0 then
+        del(bloom_particles, p)
+      end
+    end
+    
+    if #bloom_particles == 0 then
+      blooming = false
+    end
+  end
+end
+
+
+function update_fall_particles()
+  if falling then
+    for p in all(fall_particles) do
+      p.y += p.vy
+      p.vy += 0.01
+      p.x += sin(p.y / 2)
+      if p.y > 128 then
+        del(fall_particles, p)
+      end
+    end
+    
+    if #fall_particles == 0 then
+      falling = false
+    end
+  end
+end
+
+function update_seed_particles()
+  for p in all(particles) do
+    p.x += p.vx
+    p.y += p.vy
+    p.life -= 1
+    
+    p.vx *= 0.9
+    p.vy *= 0.9
+    --  p.vy += 0.1
+    --  p.vy -= 0.05
+    if p.life <= 0 then
+      del(particles, p)
+    end
+  end
+end
+
+function draw_seed_particles()
+  for p in all(particles) do
+    if p.life > 5 then
+      circfill(p.x, p.y, 1, p.c)
+    else
+      pset(p.x, p.y, p.c)
+    end
+  end
+end
+
+function draw_bloom_particles()
+  if blooming then
+    for p in all(bloom_particles) do
+      if p.life > 10 then
+        circfill(p.x, p.y, p.s, p.c)
+      else
+        pset(p.x, p.y, p.c)
+      end
+    end
+  end
+end
+
+function draw_fall_particles()
+  if falling then
+    for p in all(fall_particles) do
+      circfill(p.x, p.y, p.s, p.c)
+    end
+  end
+end
 -->8
 
 -->8
@@ -409,10 +655,11 @@ function init_dbg()
 --				spawn_seed()
 --		end
 --juice it
-		fertilizer=30	
+		fertilizer=1
 		heavy_seeds=1
 		growth_hormone=1
 		photosynthesis=1
+		total_seeds = "1000000"
 end
 
 function update_dbg()
