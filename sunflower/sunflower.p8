@@ -11,6 +11,7 @@ function _init()
 		init_sunflower()
 		init_upgrades()
 		init_particles()
+		init_john()
 		if debug then
 				init_dbg()
 		end
@@ -154,8 +155,11 @@ function _update()
 				update_menu()
 				update_sunflower()
 				update_particles()
+				update_motivational()
 		elseif state == "start" then
 				update_start()
+		elseif state == "intro" then
+				update_intro()
 		elseif state == "end" then
 				update_end()
 		end
@@ -169,9 +173,12 @@ function _draw()
 		if state == "game" then
 				draw_sunflower()
 				draw_particles()
+				draw_motivational()
 				draw_menu()
 		elseif state == "start" then
 				draw_start()
+		elseif state == "intro" then
+				draw_intro()
 		elseif state == "end" then
 				draw_end()
 		end
@@ -212,6 +219,7 @@ function update_sunflower()
 				total_seeds = stringadd(total_seeds,bonus)
 				bonus = stringmul("800",tostr(counter))
 				seeds = {}
+				show_motivational()
 		end
 		if btnp(❎) and not menu then
 		  spawn_seed()
@@ -286,7 +294,7 @@ function draw_petals_around_circle()
   end
 end
 function draw_info()
-		local c = 13
+		local c = 0
 --		rectfill(0,122,128,128,0)
 	 print("shop:z/🅾️",1,123,c)
 	 print("pollinate:❎",80,123,c)
@@ -532,7 +540,7 @@ function spawn_particles(x, y)
       y = y,
       vx = rnd(2) - 1,
       vy = rnd(2) - 1,
-      life = 15,
+      life = 10,
       c = flr(rnd(2) + 9)
     })
   end
@@ -660,7 +668,67 @@ function draw_fall_particles()
   end
 end
 -->8
+--farmer john
 
+function init_john()
+ tick,frame,step=0,1,4
+ john={11,13}
+ init_motivational()
+end
+
+function update_john()
+ tick=(tick+1)%step
+ if (tick==0) frame=frame%#john+1
+end
+
+function draw_john()
+	local x = 64
+	local y = 64
+	local legs = 45
+ spr(john[frame],x,y,2,2)
+ spr(legs,x,y+16,2,2)
+end
+
+
+function init_motivational()
+  motiv_text = ""
+  motiv_y = 0
+  motiv_life = 0
+  motiv_phrases = {
+    "\^t\^wyou're on fire!",
+    "\^t\^wamazing!",
+    "\^t\^wget it!",
+    "\^t\^wnice!",
+    "\^t\^wgood job!",
+    "\^t\^wkeep going!",
+    "\^t\^wwow!",
+    "\^t\^wperfect!",
+    "\^t\^wincredible!"
+  }
+end
+
+function show_motivational()
+  motiv_text = motiv_phrases[flr(rnd(#motiv_phrases)) + 1]
+  motiv_y = 64  
+  motiv_life = 30
+end
+
+function update_motivational()
+  if motiv_life > 0 then
+    motiv_life -= 1
+    motiv_y -= 0.8
+  end
+end
+
+function draw_motivational()
+  if motiv_life > 0 then
+    local c = 0
+    local actual_text = sub(motiv_text, 4)
+    local text_width = #actual_text * 4 * 2  
+    
+    print(motiv_text, 69 - text_width/2, motiv_y, c)
+  end
+end
 -->8
 --dbg
 function init_dbg()
