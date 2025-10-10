@@ -17,6 +17,7 @@ end
 --update & draw
 
 function _update()
+--		update_pillars()
 		update_monki()
  	if debug then
  			update_debug()
@@ -122,6 +123,22 @@ end
 function update_monki()
 		state_machine()
 		update_animation()
+
+		cx = monki.x - 64
+  cy = monki.y - 64
+  camera(cx, cy)
+		if need_new_pillar() then
+		  local pp = rnd(3)
+		  if pp == 2 then
+		  		pp = 13
+		  else
+				  pp = 11
+		  end
+		  last_pillar_x = monki.x - 24 - rnd(25)
+		  add_pillar(11, last_pillar_x, rnd(20)+60)
+		  last_pillar_x = last_pillar_x - 24 - rnd(25)
+		  add_pillar(11, last_pillar_x, rnd(20)+60)
+		end
 end
 
 function draw_monki()
@@ -252,11 +269,18 @@ end
 function init_pillars()
 		platforms = {}
 		pillars = {}
+		last_pillar_x = 33
 		add_pillar(11,63,83)
-		add_pillar(13,33,53)
+		add_pillar(11,33,53)
 end
 
 function update_pillars()
+		for p in all(platforms) do
+				p.x += 1
+		end
+		for p in all(pillars) do
+				p.x += 1
+		end
 end
 
 function draw_pillars()
@@ -275,7 +299,7 @@ function add_pillar(sp,x,y)
 		p.sp = sp
 		p.w = 16
 		p.h = 2
-		for i=p.y+16, 128, 16 do
+		for i=p.y+16, 300, 16 do
 				p2 = {}
 				p2.sp = 43
 				p2.x = x
@@ -284,6 +308,15 @@ function add_pillar(sp,x,y)
 		end
 		add(platforms,p)
 end
+
+function need_new_pillar()
+  if monki.x < last_pillar_x+5 then
+    return true
+  end
+  return false
+end
+
+
 -->8
 --collision
 
@@ -298,17 +331,14 @@ function on_pillar(a, b)
 	   a.x + offset_right > b.x + b.w
 	   or a.x + a.w < b.x + offset_left
 	   or a.y + a.h < b.y
-	   or a.y + a.h > b.y + 4
+	   or a.y + a.h > b.y + 8
 	 )
 end
 -->8
 --dbg
 function init_debug()
 	monki.state = "idle"
-	print_debug = false
-	p={}
- p.a=0
- p.s=5
+	print_debug = true
 end
 
 function update_debug()
@@ -321,6 +351,8 @@ function draw_debug()
 				local m = monki.state
 				print(tostr(on_platform_dbg())
 				.."\nstate: "..m
+				.."\nx: "..monki.x
+				.."\ny: "..monki.y
 				.."\nt: "..monki[m].t
 				.."\nf: "..monki[m].f
 				.."\ns: "..monki[m].s
@@ -330,6 +362,7 @@ function draw_debug()
 				.."\njump_power: "..jump_power
 				.."\nvx: "..monki.vx
 				.."\nvy: "..monki.vy
+				.."\npx: "..platforms[1].x
 				,0,0)
 		end
 end
