@@ -128,8 +128,8 @@ function update_monki()
   cy = monki.y - 64
   camera(cx, cy)
 		if need_new_pillar() then
-		  local pp = rnd(3)
-		  if pp == 2 then
+		  local pp = flr(rnd(4))
+		  if pp % 2 == 0 then
 		  		pp = 13
 		  else
 				  pp = 11
@@ -137,7 +137,7 @@ function update_monki()
 		  last_pillar_x = monki.x - 24 - rnd(25)
 		  add_pillar(11, last_pillar_x, rnd(20)+60)
 		  last_pillar_x = last_pillar_x - 24 - rnd(25)
-		  add_pillar(11, last_pillar_x, rnd(20)+60)
+		  add_pillar(pp, last_pillar_x, rnd(20)+60)
 		end
 end
 
